@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.gitignore
+.env
+.env.local
+.env.development
+.env.production
+.vscode
+.idea
+tests/__snapshots__
+coverage
+*.log
+README.md

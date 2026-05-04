@@ -1,0 +1,60 @@
+name: invoice-check-approval
+
+services:
+  backend-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: invoice-backend-api:local
+    container_name: invoice-backend-api
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: file:/data/invoices.db
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+      CORS_ALLOW_ORIGIN: http://localhost:3001
+      NODE_ENV: production
+    volumes:
+      - backend-data:/data
+    healthcheck:
+      # I-02: BusyBox wget は HTTP 5xx でも exit 0 を返すケースがあるため、
+      # 本文に "status":"ok" が含まれることを grep で確認する。
+      test:
+        - CMD-SHELL
+        - wget -qO- http://127.0.0.1:3000/api/health | grep -q '"status":"ok"'
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  frontend-ui:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # build-time に Vite が import.meta.env.VITE_API_BASE_URL に埋め込む
+        VITE_API_BASE_URL: http://localhost:3000
+    image: invoice-frontend-ui:local
+    container_name: invoice-frontend-ui
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -qO /dev/null --tries=1 --timeout=3 http://127.0.0.1:3001/
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  backend-data:
+    driver: local

@@ -1,0 +1,20 @@
+node_modules
+.next
+dist
+coverage
+*.log
+.env
+.env.local
+.env.*.local
+.eslintcache
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma local DBs (do NOT ignore migrations/)
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-wal
+
+# Test DB
+test.db
+test.db-journal

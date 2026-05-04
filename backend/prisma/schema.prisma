@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Invoice {
+  id                    String    @id @default(cuid())
+  invoice_number        String
+  vendor_id             String
+  invoice_amount        Int
+  purchase_order_amount Int
+  due_date              DateTime
+  status                String
+  approver_id           String?
+  approved_at           DateTime?
+  rejection_reason      String?
+  rejected_by           String?
+  rejected_at           DateTime?
+  deleted_at            DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
+
+  audit_logs AuditLog[]
+
+  @@unique([vendor_id, invoice_number])
+  @@index([status])
+  @@index([deleted_at])
+  @@index([created_at])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  action        String
+  actor_id      String
+  invoice_id    String
+  before_status String?
+  after_status  String?
+  note          String?
+  created_at    DateTime @default(now())
+
+  invoice Invoice @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+
+  @@index([invoice_id])
+  @@index([action])
+  @@index([created_at])
+}
